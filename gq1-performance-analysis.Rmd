@@ -1,0 +1,163 @@
+---
+title: "Student Absenteeism and Academic Performance — Guiding Question 1"
+author: "Bhavya Dadhich"
+output:
+  pdf_document: default
+---
+
+
+````{r setup, include = FALSE}
+# Loading the libraries
+
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(2026)
+
+library(dplyr)
+library(ggplot2)
+library(mosaic)
+
+````
+
+# Investigation Goal:
+The goal of this investigation is to determine whether student absenteeism (categorized as fewer than 7 absences vs. more than 7 absences) is associated with student engagement and academic performance among students?
+
+## Guiding Q1) 
+
+Is the proportion of high-level performers in the low-absence group greater than the proportion of high-level performers in the high-absence group
+
+
+```{r}
+# Loading the dataset
+
+student_data = read.csv("dataset/xAPI-Edu-Data.csv")
+dim(student_data)
+```
+
+```{r}
+# Reading the dataset
+
+head(student_data)
+tail(student_data)
+```
+
+```{r}
+table(student_data$StudentAbsenceDays, student_data$Class)
+```
+## Interpretation
+
+From the table above, we can observe that, out of 289 students in the low-absence group (Under-7), 138 have the High-performance band. 
+
+And, of the 191 students with high-absence group ( Above-7), only 4 have reached the High-performance band
+
+
+## Stating the hypothesis:
+
+Let $p_{\text{HN}}$ be the proportion of students in the low-absence group (Under-7) who reach the High-performance band.
+
+Let $p_{\text{HY}}$ be the proportion of students in the high-absence group (Above-7) who reach the High-performance band.
+
+$$H_0: p_{\text{HN}} \leq p_{\text{HY}}$$
+
+$$H_A: p_{\text{HN}} > p_{\text{HY}}$$
+This indicates it is a right-tailed test.
+
+$$ \text{We will be using a significance level of} \  \alpha = 0.05$$
+
+## The Approach:
+
+We are going to perform a permutation test on the difference in two sample proportions.
+The permutation test is condition-free and does not assume anything about the shape of the population distribution.
+
+
+```{r}
+# Creating a 1/0 data vector for High band performers
+
+student_data = student_data %>% mutate(high_perf = ifelse(Class == "H", 1,0))
+
+table(student_data$high_perf) # verifying the column and its values
+```
+```{r}
+# Now, favstats orders groups alphabetically: [1] = Above-7, [2] = Under-7
+# so mean[2] - mean[1] gives Under-7 minus Above-7, matching H_A
+stats_gq1 = favstats(~high_perf | StudentAbsenceDays, data = student_data)
+stats_gq1
+
+obs_diff = stats_gq1$mean[2] - stats_gq1$mean[1]
+print(obs_diff)
+```
+
+```{r}
+# Now, permute
+
+
+n_total = nrow(student_data)
+n_under = 289
+N = 1999
+perm.outcome = numeric(N)
+
+for(i in 1:N)
+{
+  index = sample(n_total, n_under, replace = FALSE)
+  perm.outcome[i] = mean(student_data$high_perf[index]) - mean(student_data$high_perf[-index])
+}
+
+perm.df = data.frame(perm.outcome)
+summary(perm.df)
+```
+```{r}
+# Now, visualizing the permutation distribution using histogram
+
+ggplot(perm.df, aes(x = perm.outcome)) + geom_histogram(aes(y = after_stat(density)), col = 'black', fill = 'steelblue', binwidth = 0.01) + geom_vline(xintercept = obs_diff, col = "red") +  xlab("Difference in Proportion of High Performers (Under-7 minus Above-7)") +  ylab("Density") + 
+  ggtitle("Permutation Distribution of the Difference in Proportions")
+```
+
+## Interpretation
+
+What we can infer from this histogram plot is:
+The histogram shows the distribution of the difference in proportions produced by 1999 random permutations of the absence labels. It is centred near zero and ranges from about -0.10 to +0.15, which is what we would expect if absenteeism had no bearing on performance. The red line indicates that the observed difference of 0.4566, which lies far outside the range of anything the permutations produced.
+
+```{r}
+# Now, computing the P-value
+
+emp_pvalue_gq1 = (sum(perm.outcome >= obs_diff) + 1) / (N + 1)
+emp_pvalue_gq1
+```
+```{r}
+# Now finally, computing the 95% confidence-interval for the difference in the proportions
+
+x_HN = 138
+x_HY = 4
+
+n_HN = 289
+n_HY = 191
+
+prop.test(c(x_HN +1, x_HY + 1) , c(n_HN + 2, n_HY + 2), alternative = "two.sided", correct = FALSE)$conf
+```
+
+## Interpretation
+
+What we can infer from the results obtained is:
+
+Observed difference = : $\hat{p}_{\text{HN}} - \hat{p}_{\text{HY}} = 0.4566$
+Empirical P-value: 0.0005
+
+This means that if absenteeism had no bearing on reaching the High-performance band, so that the two group labels carried no meaning, then the probability of getting a difference in proportions as large as the observed 0.4566 is about 0.0005. Which is extremely small, and a difference this large is very unlikely to happen by chance alone.
+
+Decision: Since the empirical p-value is 0.0005, which is less than $\alpha = 0.05$, we reject $H_0$.
+
+Conclusion:
+From these results, there is very strong statistical evidence that the proportion of students reaching the High-performance band is greater among students with fewer than 7 absence days than among students with more than 7 absence days.
+
+95% Confidence Interval:
+
+Also, we estimate with 95% confidence that the proportion of students reaching the High-performance band is between 0.3901 and 0.5134 higher in the low-absence group than in the high-absence group. Since the interval lies entirely above zero, it is consistent with the decision to reject $H_0$.
+
+$$0.3901 < p_{\text{HN}} - p_{\text{HY}} < 0.5134$$
+ 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+

@@ -1,0 +1,46 @@
+---
+title: "Guiding Question 2 — Course Content Visits"
+author: "JG"
+date: "2026-10-01"
+output: html_document
+---
+
+Guiding question 2: Is the average number of times course content is
+visited greater among students with low absenteeism than among students
+with high absenteeism?
+
+$$
+Let $\mu_{LC}$ = mean number of times course content is visited by students with low absenteeism. Let $\mu_{HC}$ = mean number of times course content is visited by students with high absenteeism. $H_0$: $\mu_{LC} \le \mu_{HC}$ $H_A$: $\mu_{LC} > \mu_{HC}$
+$$
+
+
+```{r}
+df = read.csv("dataset/xAPI-Edu-Data.csv")
+df
+summary_stats = favstats(VisITedResources ~ StudentAbsenceDays, data = df)
+summary_stats
+ggplot(df, aes(x = factor(StudentAbsenceDays, levels = c("Under-7", "Above-7")), 
+               y = VisITedResources, 
+               fill = StudentAbsenceDays)) +
+  geom_boxplot() +
+  labs(title = "Course Content Visits by Student Absenteeism Level",
+       x = "Absence Days",
+       y = "Number of Visits to Course Content") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Under-7" = "skyblue", "Above-7" = "orange")) +
+  theme(legend.position = "none")
+
+```
+
+```{r}
+#split the data in low and high absence 
+low_absenteeism = subset(df, StudentAbsenceDays == "Under-7")$VisITedResources
+high_absenteeism = subset(df, StudentAbsenceDays == "Above-7")$VisITedResources
+
+t_test_results = t.test(x = low_absenteeism, 
+                        y = high_absenteeism, 
+                        alternative = "greater", 
+                        var.equal = FALSE)
+t_test_results
+```
+

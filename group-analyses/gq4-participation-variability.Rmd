@@ -1,0 +1,111 @@
+---
+title: "Guiding Question 4 — Variability in Participation"
+output: html_document
+Author: "Eric Jiang"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(aod)
+library(binom)
+library(car)
+library(collapsibleTree)
+library(dbplyr)
+library(dplyr)
+library(Ecdat)
+library(EnvStats)
+library(faraway)
+library(ggformula)
+library(ggplot2)
+library(ggpubr)
+library(gmodels)
+library(gridExtra)
+library(htmltools)
+library(ISLR)
+library(knitr)
+library(lawstat)
+library(leaps)
+library(lmtest)
+library(MASS)
+library(markdown)
+library(mctest)
+library(mosaic)
+library(mdsr)
+library(mosaicData)
+#library(nycflights13)
+library(nycflights23)
+library(olsrr)
+#library(plyr)
+library(purrr)
+library(plotly)
+library(resampledata)
+library(rmarkdown)
+library(rpart)
+library(rlang)
+library(rpart.plot)
+library(rvest)
+library(SDaA)
+library(shiny)
+library(stringi)
+library(tibble)
+library(tidyr)
+library(tidyselect)
+library(tinytex)
+library(yaml)
+library(shiny)
+library(aod)
+library(ROCR)
+library(pROC)
+library(GGally)
+library(mctest)
+library(readxl)
+```
+
+d) 
+$$ Let \  \sigma_{LH} = \text{standard deviation of the number of hands raised among students with low absenteeism} \\
+Let \ \sigma_{HH} = \text{standard deviation of the number of hands raised among students with high absenteeism}
+$$
+$$ H_0: \sigma_{LH} = \sigma_{HH}$$
+$$ H_A: \sigma_{LH} \ne \sigma_{HH}$$
+$$ \text{We will be using a significance level of} \  \alpha = 0.05$$
+
+$$ \text{We are going to perform a 2 sample t-test, more specifically Levene's test of equal variance. The test is essentially a 2 sample t test of the absolute difference \\ from the median. We require 3 assumptions to be satisfied in order for this test to be administered. }$$
+$$  
+1. \text{Independence: We are assuming independence as there is no verifiable way to prove if the data is dependent or independent as there are no identifying columns.} \\
+2. \text{Representative sample: The sample will be assumed to be representative of the target population of all Kalboard 360 students.} \\
+3. \text{Normality: The sample size is sufficiently large n = 480 so we can utilize the central limit theorem and assume the sample mean is approximately normal.}
+$$
+
+
+```{r}
+xAPI_Edu_Data = read.csv("dataset/xAPI-Edu-Data.csv")
+high_absent_hands <- xAPI_Edu_Data$raisedhands[xAPI_Edu_Data$StudentAbsenceDays == "Above-7"]
+
+low_absent_hands <- xAPI_Edu_Data$raisedhands[xAPI_Edu_Data$StudentAbsenceDays == "Under-7"]
+
+head(high_absent_hands,4)
+head(low_absent_hands,4)
+
+favstats(high_absent_hands)
+favstats(low_absent_hands)
+
+leveneTest(raisedhands ~ StudentAbsenceDays, data = xAPI_Edu_Data, conf.level = 0.95)
+```
+
+```{r}
+ggplot(xAPI_Edu_Data,aes(x = StudentAbsenceDays, y = raisedhands, fill = StudentAbsenceDays)) +
+  geom_boxplot(alpha = 0.7, outlier.colour = "red", outlier.shape = 16) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, color = "black") + 
+  scale_fill_manual(values = c("Above-7" = "#E41A1C", "Under-7" = "#377EB8")) +
+  labs(
+    title = "Distribution of Raised Hands by Student Absence Days",
+    x = "Student Absence Days",
+    y = "Number of Raised Hands",
+    caption = "Black diamonds represent the mean values"
+  ) +
+  theme(legend.position = "none") # Removes redundant legend
+```
+
+At a 0.05 significance level, our p-value from our Levene's t test is 0.09431. The p-value is higher than our significance level. With 95% confidence, we fail to reject the null hypothesis. The standard devations of hands raised in the low and high absenteeism students are the same. 
+
+

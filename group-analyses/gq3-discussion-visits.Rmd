@@ -1,0 +1,166 @@
+---
+title: "Guiding Question 3 — Discussion Post Visits"
+output: word_document
+---
+
+# Question c
+
+Is the average number of times discussion posts are visited lower among students with low absenteeism than among students with high absenteeism?
+
+## Statistical Hypotheses
+
+- **Under-7** = low absenteeism
+- **Above-7** = high absenteeism
+- **Discussion** = number of discussion-post visits
+
+Let:
+
+\[
+\mu_{LD} = \text{mean number of discussion-post visits for students with low absenteeism}
+\]
+
+\[
+\mu_{HD} = \text{mean number of discussion-post visits for students with high absenteeism}
+\]
+
+The hypotheses are:
+
+\[
+H_0: \mu_{LD} \leq \mu_{HD}
+\]
+
+\[
+H_A: \mu_{LD} > \mu_{HD}
+\]
+
+## Loading Data
+
+```{r}
+student.df = read.csv("dataset/xAPI-Edu-Data.csv")
+head(student.df, 4)
+```
+
+## Visualization: Side-by-Side Boxplot
+
+```{r}
+library(ggplot2)
+
+ggplot(student.df, aes(x = StudentAbsenceDays, y = Discussion)) +
+  geom_boxplot(col = "blue") +
+  xlab("Absenteeism Group") +
+  ylab("Number of Discussion Visits") +
+  ggtitle("Discussion Visits by Student Absence Days")
+```
+
+## Bootstrap Analysis
+
+The bootstrap method is used to estimate the sampling distribution of the difference in mean Discussion visits between students with low absenteeism and students with high absenteeism. Resampling is performed separately within each absenteeism group so that the original group structure is preserved.
+
+```{r}
+options(scipen = 999)
+library(mosaic)
+
+favstats(~Discussion | StudentAbsenceDays, data = student.df)
+
+# Separate Discussion visits into the two absenteeism groups
+low_absence = student.df$Discussion[
+  student.df$StudentAbsenceDays == "Under-7"
+]
+
+high_absence = student.df$Discussion[
+  student.df$StudentAbsenceDays == "Above-7"
+]
+
+# Number of bootstrap resamples
+N_bootstraps = 5000
+
+# Original sample sizes for each group
+n_low = length(low_absence)
+n_high = length(high_absence)
+
+# Create an empty vector to store each bootstrap difference in means
+# Difference is defined as:
+# mean(low absenteeism) - mean(high absenteeism)
+boot.diff = numeric(N_bootstraps)
+
+set.seed(602)
+
+for(i in 1:N_bootstraps){
+
+  # Resample each group separately with replacement
+  boot.sample.low = sample(low_absence, n_low, replace = TRUE)
+  boot.sample.high = sample(high_absence, n_high, replace = TRUE)
+
+  # Store the difference between the two bootstrap sample means
+  boot.diff[i] = mean(boot.sample.low) - mean(boot.sample.high)
+}
+
+# Store the bootstrap differences in a data frame
+bootstrap.diff = data.frame(boot.diff)
+
+# Display the first four bootstrap differences
+head(bootstrap.diff, 4)
+```
+
+### Bootstrap Distribution
+
+```{r}
+ggplot(bootstrap.diff, aes(x = boot.diff)) +
+  geom_histogram(
+    aes(y = after_stat(density)),
+    col = "orange",
+    fill = "blue",
+    bins = 20
+  ) +
+  xlab("Bootstrap Difference in Mean Discussion Visits (Low - High Absenteeism)") +
+  ylab("Density") +
+  ggtitle(
+    "Bootstrap Distribution of the Difference in Means",
+    subtitle = "5000 Bootstrap Resamples"
+  )
+```
+
+### 95% Bootstrap Confidence Interval
+
+```{r}
+boot_ci = qdata(
+  ~boot.diff,
+  c(0.025, 0.975),
+  data = bootstrap.diff
+)
+
+boot_ci
+```
+
+## Method: Two-Sample t-Test
+
+```{r}
+low_absence = student.df$Discussion[
+  student.df$StudentAbsenceDays == "Under-7"
+]
+
+high_absence = student.df$Discussion[
+  student.df$StudentAbsenceDays == "Above-7"
+]
+
+t_test_result = t.test(
+  low_absence,
+  high_absence,
+  alternative = "greater",
+  conf.level = 0.95
+)
+
+t_test_result
+```
+
+## Conclusion
+
+The Welch two-sample t-test produced a p-value of 0.0000006458.
+
+Since this p-value is much smaller than the significance level of \(\alpha = 0.05\), we reject the null hypothesis.
+
+There is sufficient statistical evidence to conclude that students with low absenteeism have a **higher average number of discussion-post visits** than students with high absenteeism.
+
+The mean number of discussion visits was approximately **48.19** for students with low absenteeism and **35.85** for students with high absenteeism.
+
+Therefore, the data do **not** support the original claim that students with low absenteeism visit discussion posts less often.
