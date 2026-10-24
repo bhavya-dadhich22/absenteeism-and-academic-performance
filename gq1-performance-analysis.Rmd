@@ -49,6 +49,18 @@ From the table above, we can observe that, out of 289 students in the low-absenc
 
 And, of the 191 students with high-absence group ( Above-7), only 4 have reached the High-performance band
 
+```{r}
+# Performance band by absence level
+ggplot(student_data, aes(x = StudentAbsenceDays, fill = Class)) +
+  geom_bar(position = "fill") +
+  labs(x = "Absence level",
+       y = "Proportion of students",
+       fill = "Performance band",
+       title = "Performance Band by Absence Level") +
+  theme_minimal()
+
+ggsave("figures/performance-by-absence.png", width = 7, height = 4.5, dpi = 150)
+```
 
 ## Stating the hypothesis:
 
@@ -108,7 +120,9 @@ summary(perm.df)
 # Now, visualizing the permutation distribution using histogram
 
 ggplot(perm.df, aes(x = perm.outcome)) + geom_histogram(aes(y = after_stat(density)), col = 'black', fill = 'steelblue', binwidth = 0.01) + geom_vline(xintercept = obs_diff, col = "red") +  xlab("Difference in Proportion of High Performers (Under-7 minus Above-7)") +  ylab("Density") + 
-  ggtitle("Permutation Distribution of the Difference in Proportions")
+  ggtitle("Permutation Distribution of the Difference in Proportions") 
+
+ggsave("figures/permutation-distribution.png", width = 8, height = 5, dpi = 150)
 ```
 
 ## Interpretation
