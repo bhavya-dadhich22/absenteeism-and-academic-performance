@@ -5,10 +5,10 @@
 Does absenteeism relate to academic performance and classroom engagement?
 A statistical analysis of 480 student records.
 
-![Permutation distribution of the difference in proportions](figures/permutation-distribution.png)
+![Performance band by absence level](figures/performance-by-absence.png)
 
-The red line marks the observed difference of 0.4566 — far outside anything
-1,999 random permutations of the absence labels produced (−0.14 to +0.14).
+Low-absence students reached the high-performance band 47.8% of the time.
+High-absence students: 2.1%.
 
 ## Question
 
@@ -27,7 +27,11 @@ band (138 of 289) versus 2.1% of high-absence students (4 of 191) — a
 difference of 45.7 percentage points. Permutation P = 0.0005;
 95% CI [0.3901, 0.5134].
 
-![Performance band by absence level](figures/performance-by-absence.png)
+![Permutation distribution of the difference in proportions](figures/permutation-distribution.png)
+
+The red line is the observed difference of 0.4566. Across 1,999 random
+permutations of the absence labels, no reshuffle came close — the simulated
+differences span roughly −0.14 to +0.14.
 
 **Resource use.** Low-absence students visited course content 33.7 more times
 on average (68.2 vs 34.5); Welch t(380.5) = 12.36, P < 2.2e-16.
@@ -106,5 +110,3 @@ Eric Jiang (Question 4). Their analyses are in `group-analyses/`, included with
 their agreement.
 
 ---
-
-[LinkedIn](https://www.linkedin.com/in/bhavya-dadhich/) · bhavya.dadhich22@gmail.com
